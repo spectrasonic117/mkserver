@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+# Binary by Spectrasonic
+
+EXEC_PATH="/opt/mkserver"
+exec ${EXEC_PATH}/mkserver.sh $@
