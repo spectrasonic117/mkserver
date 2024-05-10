@@ -85,13 +85,8 @@ function select_option {
     return $selected
 }
 
-# Global Variables
-# MC_VERSION="1.20.1"
-# PURPUR_API="https://api.purpurmc.org/v2/purpur/${MC_VERSION}/latest/download"
 INIT_RAM="1G"
 MAX_RAM="3G"
-# EXTRA_FLAGS=""
-
 
 echo "$(tput setaf 2)Generando servidor de Minecraft con PaperMC"
 read -p "${GREEN}Nombre del Servidor: ${RES}" FOLDER_NAME
@@ -107,22 +102,33 @@ cd "${FOLDER_NAME}"
 # choice=$?
 # MINECRAFT_VERSION="${options[$choice]}"
 
-
-PROJECT="paper"
+echo "${YELLOW}Select Server Project: ${RES}"
+echo
+options=("paper" "purpur")
+select_option "${options[@]}"
+choice=$?
+PROJECT="${options[$choice]}"
 MINECRAFT_VERSION="1.20.4"
 
-LATEST_BUILD=$(curl -s https://api.papermc.io/v2/projects/${PROJECT}/versions/${MINECRAFT_VERSION}/builds | \
-    jq -r '.builds | map(select(.channel == "default") | .build) | .[-1]')
+case $PROJECT in
+	"paper")
+		echo "${BLUE}PaperMC Selected${RES}"
+		LATEST_BUILD=$(curl -s https://api.papermc.io/v2/projects/${PROJECT}/versions/${MINECRAFT_VERSION}/builds | \
+    	jq -r '.builds | map(select(.channel == "default") | .build) | .[-1]')
 
-JAR_NAME=${PROJECT}-${MINECRAFT_VERSION}-${LATEST_BUILD}.jar
+		JAR_NAME=${PROJECT}-${MINECRAFT_VERSION}-${LATEST_BUILD}.jar
 
-PAPERMC_URL="https://api.papermc.io/v2/projects/${PROJECT}/versions/${MINECRAFT_VERSION}/builds/${LATEST_BUILD}/downloads/${JAR_NAME}"
+		JAR_DOWNLOAD="https://api.papermc.io/v2/projects/${PROJECT}/versions/${MINECRAFT_VERSION}/builds/${LATEST_BUILD}/downloads/${JAR_NAME}"
+		;;
+	"purpur")
+		JAR_DOWNLOAD="https://api.purpurmc.org/v2/purpur/${MINECRAFT_VERSION}/latest/download"
+		;;
+esac
 
-curl -o server.jar $PAPERMC_URL
-echo "Server download completed"
 
-# wget -O server.jar "${PAPER_URL}"
-# echo "${YELLOW}Server Descargado.${RES}"
+curl -o server.jar $JAR_DOWNLOAD
+echo "${YELLOW}Server download completed${RES}"
+
 
 # Create Eula File
 echo "eula=true" > eula.txt
@@ -241,16 +247,6 @@ ALLOWFLIGHT="${options[$choice]}"
 clear
 
 # ------------------------------
-# echo "${YELLOW}Select Leveltype: ${RES}"
-# echo
-# options=("normal" "flat" "large_biomes" "amplified" "buffet" "default_1_1")
-# select_option "${options[@]}"
-# choice=$?
-# echo "${BLUE}Leveltype: ${GREEN}${options[$choice]}${RES}"
-# LEVELTYPE="${options[$choice]}"
-# clear
-
-# ------------------------------
 echo "${YELLOW}Online Mode: ${RES}"
 echo
 options=("true" "false")
@@ -322,23 +318,20 @@ spawn-protection=0
 resource-pack-sha1=
 max-world-size=29999984" > $PWD/server.properties
 
-# Crete a Start.sh File
+# Crete a start.sh File
 printf "#\!/usr/bin/env bash
 java -jar -Xms${INIT_RAM} -Xmx${MAX_RAM} server.jar nogui" > start.sh
 chmod +x start.sh
 chmod +x server.jar
 
 while true; do
-	printf "${BLUE}Run ${MINECRAFT_VERSION} Server?: ${YELLOW}(Y/N)${RES} "
+	printf "${BLUE}Run ${PROJECT} ${MINECRAFT_VERSION} Server?: ${YELLOW}(Y/N)${RES} "
     read yn
     case $yn in
         [Yy]* )
         command bash start.sh
-		# printf "Yes"
         break;;
         [Nn]* )
-        # Printf "Finished!"
-		# printf "No"
         exit 0
         ;;
         * ) 

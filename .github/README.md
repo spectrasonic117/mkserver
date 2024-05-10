@@ -1,6 +1,12 @@
 # MK SERVER
 
-Create a Minecraft server with the latest build of PaperMC
+Create a Minecraft server with the latest build of PaperMC or PurpurMC
+
+### Before Starting
+
+> if youre in macOS, run `brew install jq`
+
+> if youre in Linux (Ubuntu/Debian), run `sudo apt install -y jq`
 
 ### To install
 
