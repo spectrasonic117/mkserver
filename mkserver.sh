@@ -136,7 +136,7 @@ echo "${YELLOW}Archivo Eula creado.${RES}"
 
 # Create the icon server
 echo "${YELLOW}"
-curl -O https://bitbucket.org/Spectrasonic/svg-rep/raw/beb78d67ad4f636cc8c68d421bc54ba9a784aeb4/PNG%20Images/server-icon.png
+curl -o server-icon.png "https://raw.githubusercontent.com/spectrasonic117/Server-Assets/master/ServerAssets/nineblock_icon.png"
 echo "${RES}"
 echo "${GREEN}Icono Servidor creado."
 
