@@ -320,12 +320,7 @@ max-world-size=29999984" > $PWD/server.properties
 
 # Crete a start.sh File
 printf "#!/usr/bin/env sh
-
-while [ true ]; do
-    java -Xmx${INIT_RAM} -Xms${MAX_RAM} -XX:+AlwaysPreTouch -XX:+DisableExplicitGC -XX:+ParallelRefProcEnabled -XX:+PerfDisableSharedMem -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1HeapRegionSize=8M -XX:G1HeapWastePercent=5 -XX:G1MaxNewSizePercent=40 -XX:G1MixedGCCountTarget=4 -XX:G1MixedGCLiveThresholdPercent=90 -XX:G1NewSizePercent=30 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:G1ReservePercent=20 -XX:InitiatingHeapOccupancyPercent=15 -XX:MaxGCPauseMillis=200 -XX:MaxTenuringThreshold=1 -XX:SurvivorRatio=32 -Dusing.aikars.flags=https://mcflags.emc.gs -Daikars.new.flags=true -jar server.jar nogui
-    echo Server restarting...
-    echo Press CTRL + C to stop.
-done" > start.sh
+java -Xmx${INIT_RAM} -Xms${MAX_RAM} -jar server.jar nogui" > start.sh
 chmod +x start.sh
 chmod +x server.jar
 
