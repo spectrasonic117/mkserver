@@ -94,14 +94,6 @@ read -p "${GREEN}Nombre del Servidor: ${RES}" FOLDER_NAME
 mkdir "${FOLDER_NAME}"
 cd "${FOLDER_NAME}"
 
-# Download a purpur server file
-# echo "${YELLOW}Select Version: ${RES}"
-# echo
-# options=("1.20.4" "1.19.4" "1.18.2" "1.17.1" "1.16.5")
-# select_option "${options[@]}"
-# choice=$?
-# MINECRAFT_VERSION="${options[$choice]}"
-
 echo "${YELLOW}Select Server Project: ${RES}"
 echo
 options=("paper" "purpur")
@@ -115,9 +107,7 @@ case $PROJECT in
 		echo "${BLUE}PaperMC Selected${RES}"
 		LATEST_BUILD=$(curl -s https://api.papermc.io/v2/projects/${PROJECT}/versions/${MINECRAFT_VERSION}/builds | \
     	jq -r '.builds | map(select(.channel == "default") | .build) | .[-1]')
-
 		JAR_NAME=${PROJECT}-${MINECRAFT_VERSION}-${LATEST_BUILD}.jar
-
 		JAR_DOWNLOAD="https://api.papermc.io/v2/projects/${PROJECT}/versions/${MINECRAFT_VERSION}/builds/${LATEST_BUILD}/downloads/${JAR_NAME}"
 		;;
 	"purpur")
@@ -340,4 +330,4 @@ while true; do
     esac
 done
 
-echo "$(tput bold)$(tput setaf 2)Servidor Purpur creado correctamente.${RES}"
+echo "${BOLD}${GREEN}Servidor ${YELLOW}${PROJECT} ${GREEN}creado correctamente.${RES}"
