@@ -310,7 +310,7 @@ max-world-size=29999984" > $PWD/server.properties
 
 # Crete a start.sh File
 printf "#!/usr/bin/env sh
-java -Xmx${INIT_RAM} -Xms${MAX_RAM} -jar server.jar nogui" > start.sh
+java -Xms${INIT_RAM} -Xmx${MAX_RAM} -jar server.jar nogui" > start.sh
 chmod +x start.sh
 chmod +x server.jar
 
