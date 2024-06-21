@@ -116,9 +116,12 @@ case $PROJECT in
 esac
 
 
-curl -o server.jar $JAR_DOWNLOAD
-echo "${YELLOW}Server download completed${RES}"
-
+if [ ! -f "server.jar" ]; then
+	curl -o server.jar $JAR_DOWNLOAD
+	echo "${YELLOW}Server download completed${RES}"
+else
+	echo "${YELLOW}Server already downloaded${RES}"
+fi
 
 # Create Eula File
 echo "eula=true" > eula.txt
@@ -280,7 +283,7 @@ allow-nether=${ALLOWNETHER}
 server-port=25565
 enable-rcon=true
 sync-chunk-writes=false
-server-name=Unknown Server
+server-NineBlock Server
 op-permission-level=4
 prevent-proxy-connections=false
 hide-online-players=false
