@@ -88,39 +88,61 @@ function select_option {
 INIT_RAM="1G"
 MAX_RAM="3G"
 
-echo "$(tput setaf 2)Generando servidor de Minecraft con PaperMC"
-read -p "${GREEN}Nombre del Servidor: ${RES}" FOLDER_NAME
+printf "${GREEN}
+⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⠛⠛⠛⠛⠛⢿⣿⣿⣿⣿⡟⠛⠛⠛⠛⠛⣿⣿⣿⣿
+⣿⣿⣿⣿⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⡇⠀⠀⠀⠀⠀⣿⣿⣿⣿
+⣿⣿⣿⣿⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⡇⠀⠀⠀⠀⠀⣿⣿⣿⣿
+⣿⣿⣿⣿⣶⣶⣶⣶⣶⠈⠉⠉⠉⠉⠁⣶⣶⣶⣶⣶⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⡟⠛⠛⠀⠀⠀⠀⠀⠀⠛⠛⢻⣿⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⡇⠀⠀⢰⣶⣶⣶⣶⡆⠀⠀⢸⣿⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⣇⣀⣀⣼⣿⣿⣿⣿⣇⣀⣀⣸⣿⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
 
-mkdir "${FOLDER_NAME}"
+${YELLOW}${BOLD}MkServer by Spectrasonic${RES}
+
+"
+
+echo "${GREEN}Generando servidor de ${MAGENTA}Minecraft con Plugins${RES}"
+read -p "${GREEN}${BOLD}Nombre del Servidor: ${RES}" FOLDER_NAME
+
+if [ -d "${FOLDER_NAME}" ]; then
+	echo "${RED}El directorio ya existe${RES}"
+	PROJECT="${FOLDER_NAME}"
+else
+	mkdir "${FOLDER_NAME}"
+
+	echo "${YELLOW}Select Server Project: ${RES}"
+	echo
+	options=("paper" "purpur")
+	select_option "${options[@]}"
+	choice=$?
+	PROJECT="${options[$choice]}"
+	MINECRAFT_VERSION="1.20.4"
+
+	case $PROJECT in
+		"paper")
+			echo "${BLUE}PaperMC Selected${RES}"
+			LATEST_BUILD=$(curl -s https://api.papermc.io/v2/projects/${PROJECT}/versions/${MINECRAFT_VERSION}/builds | \
+			jq -r '.builds | map(select(.channel == "default") | .build) | .[-1]')
+			JAR_NAME=${PROJECT}-${MINECRAFT_VERSION}-${LATEST_BUILD}.jar
+			JAR_DOWNLOAD="https://api.papermc.io/v2/projects/${PROJECT}/versions/${MINECRAFT_VERSION}/builds/${LATEST_BUILD}/downloads/${JAR_NAME}"
+			;;
+		"purpur")
+			JAR_DOWNLOAD="https://api.purpurmc.org/v2/purpur/${MINECRAFT_VERSION}/latest/download"
+			;;
+	esac
+fi
+
 cd "${FOLDER_NAME}"
-
-echo "${YELLOW}Select Server Project: ${RES}"
-echo
-options=("paper" "purpur")
-select_option "${options[@]}"
-choice=$?
-PROJECT="${options[$choice]}"
-MINECRAFT_VERSION="1.20.4"
-
-case $PROJECT in
-	"paper")
-		echo "${BLUE}PaperMC Selected${RES}"
-		LATEST_BUILD=$(curl -s https://api.papermc.io/v2/projects/${PROJECT}/versions/${MINECRAFT_VERSION}/builds | \
-    	jq -r '.builds | map(select(.channel == "default") | .build) | .[-1]')
-		JAR_NAME=${PROJECT}-${MINECRAFT_VERSION}-${LATEST_BUILD}.jar
-		JAR_DOWNLOAD="https://api.papermc.io/v2/projects/${PROJECT}/versions/${MINECRAFT_VERSION}/builds/${LATEST_BUILD}/downloads/${JAR_NAME}"
-		;;
-	"purpur")
-		JAR_DOWNLOAD="https://api.purpurmc.org/v2/purpur/${MINECRAFT_VERSION}/latest/download"
-		;;
-esac
-
 
 if [ ! -f "server.jar" ]; then
 	curl -o server.jar $JAR_DOWNLOAD
-	echo "${YELLOW}Server download completed${RES}"
+	echo "${YELLOW}${BOLD}Completa Descarga del Servidor JAR${RES}"
 else
-	echo "${YELLOW}Server already downloaded${RES}"
+	echo "${BLUE}Server JAR Existente${RES}"
 fi
 
 # Create Eula File
