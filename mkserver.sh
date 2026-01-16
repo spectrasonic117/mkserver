@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Este scrpt crea un servidor de Minecraft con la ultima build de Papermc
 
@@ -28,65 +28,25 @@ BWHITE="$(tput setab 7)"
 BRES="$(tput sgr 0)"
 
 function select_option {
-
-    # little helpers for terminal print control and key input
-    ESC=$( printf "\033")
-    cursor_blink_on()  { printf "$ESC[?25h"; }
-    cursor_blink_off() { printf "$ESC[?25l"; }
-    cursor_to()        { printf "$ESC[$1;${2:-1}H"; }
-    print_option()     { printf "   $1 "; }
-    print_selected()   { printf "  $ESC[7m $1 $ESC[27m"; }
-    get_cursor_row()   { IFS=';' read -sdR -p $'\E[6n' ROW COL; echo ${ROW#*[}; }
-    key_input()        { read -s -n3 key 2>/dev/null >&2
-                         if [[ $key = $ESC[A ]]; then echo up;    fi
-                         if [[ $key = $ESC[B ]]; then echo down;  fi
-                         if [[ $key = ""     ]]; then echo enter; fi; }
-
-    # initially print empty new lines (scroll down if at bottom of screen)
-    for opt; do printf "\n"; done
-
-    # determine current screen position for overwriting the options
-    local lastrow=`get_cursor_row`
-    local startrow=$(($lastrow - $#))
-
-    # ensure cursor and input echoing back on upon a ctrl+c during read -s
-    trap "cursor_blink_on; stty echo; printf '\n'; exit" 2
-    cursor_blink_off
-
-    local selected=0
-    while true; do
-        # print options by overwriting the last lines
-        local idx=0
-        for opt; do
-            cursor_to $(($startrow + $idx))
-            if [ $idx -eq $selected ]; then
-                print_selected "$opt"
-            else
-                print_option "$opt"
+    local i=0
+    local choice
+    
+    PS3="${BLUE}Seleccione una opción: ${RES}"
+    
+    select choice in "$@"; do
+        for opt in "$@"; do
+            if [[ "$opt" == "$choice" ]]; then
+                return $i
             fi
-            ((idx++))
+            ((i++))
         done
-
-        # user key control
-        case `key_input` in
-            enter) break;;
-            up)    ((selected--));
-                   if [ $selected -lt 0 ]; then selected=$(($# - 1)); fi;;
-            down)  ((selected++));
-                   if [ $selected -ge $# ]; then selected=0; fi;;
-        esac
+        i=0
+        echo "${RED}Opción inválida, intente nuevamente${RES}"
     done
-
-    # cursor position back to normal
-    cursor_to $lastrow
-    printf "\n"
-    cursor_blink_on
-
-    return $selected
 }
 
 INIT_RAM="1G"
-MAX_RAM="3G"
+MAX_RAM="2G"
 
 printf "${GREEN}
 ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
@@ -108,19 +68,29 @@ ${YELLOW}${BOLD}MkServer by Spectrasonic${RES}
 echo "${GREEN}Generando servidor de ${MAGENTA}Minecraft con Plugins${RES}"
 read -p "${GREEN}${BOLD}Nombre del Servidor: ${RES}" FOLDER_NAME
 
-if [ -d "${FOLDER_NAME}" ]; then
+	if [ -d "${FOLDER_NAME}" ]; then
 	echo "${RED}El directorio ya existe${RES}"
 	PROJECT="${FOLDER_NAME}"
 else
 	mkdir "${FOLDER_NAME}"
 
+	# Seleccionar versión de Minecraft
+	echo "${YELLOW}Select Minecraft Version: ${RES}"
+	echo
+	options=("1.20.1" "1.20.4" "1.21.1" "1.21.4" "1.21.8" "1.21.10" "1.21.11")
+	select_option "${options[@]}"
+	choice=$?
+	MINECRAFT_VERSION="${options[$choice]}"
+	clear
+
+	# Seleccionar tipo de servidor
 	echo "${YELLOW}Select Server Project: ${RES}"
 	echo
 	options=("paper" "purpur")
 	select_option "${options[@]}"
 	choice=$?
 	PROJECT="${options[$choice]}"
-	MINECRAFT_VERSION="1.20.4"
+	clear
 
 	case $PROJECT in
 		"paper")
