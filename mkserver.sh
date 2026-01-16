@@ -28,21 +28,51 @@ BWHITE="$(tput setab 7)"
 BRES="$(tput sgr 0)"
 
 function select_option {
-    local i=0
-    local choice
-    
-    PS3="${BLUE}Seleccione una opción: ${RES}"
-    
-    select choice in "$@"; do
-        for opt in "$@"; do
-            if [[ "$opt" == "$choice" ]]; then
-                return $i
+    local selected=0
+    local options=("$@")
+    local num_options=${#options[@]}
+
+    # Ocultar cursor y configurar trap para restaurar
+    tput civis
+    trap 'tput cnorm; exit' INT TERM
+
+    while true; do
+        # Limpiar pantalla y mostrar opciones
+        clear
+        echo "${YELLOW}Use ↑/↓ para navegar, Enter para seleccionar:${RES}"
+        echo
+        for i in "${!options[@]}"; do
+            if [[ $i -eq $selected ]]; then
+                echo "${GREEN}▶ ${options[$i]}${RES}"
+            else
+                echo "  ${options[$i]}"
             fi
-            ((i++))
         done
-        i=0
-        echo "${RED}Opción inválida, intente nuevamente${RES}"
+        echo
+
+        # Leer entrada del teclado
+        read -rsn3 key 2>/dev/null
+
+        case "$key" in
+            $'\x1b[A')  # Flecha arriba
+                ((selected--))
+                ;;
+            $'\x1b[B')  # Flecha abajo
+                ((selected++))
+                ;;
+            "")  # Enter
+                break
+                ;;
+        esac
+
+        # Mantener selección dentro de límites
+        if [[ $selected -lt 0 ]]; then selected=$((num_options - 1)); fi
+        if [[ $selected -ge $num_options ]]; then selected=0; fi
     done
+
+    # Restaurar cursor
+    tput cnorm
+    return $selected
 }
 
 INIT_RAM="1G"
