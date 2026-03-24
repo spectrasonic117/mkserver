@@ -28,6 +28,8 @@ BWHITE="$(tput setab 7)"
 BRES="$(tput sgr 0)"
 
 function select_option {
+    # Optional prompt displayed above options (set SELECT_PROMPT before calling)
+    local prompt="${SELECT_PROMPT:-}"
     local selected=0
     local options=("$@")
     local num_options=${#options[@]}
@@ -41,6 +43,11 @@ function select_option {
         clear
         echo "${YELLOW}Use ↑/↓ para navegar, Enter para seleccionar:${RES}"
         echo
+        # Show optional description if provided
+        if [[ -n "$prompt" ]]; then
+            echo -e "$prompt"
+            echo
+        fi
         for i in "${!options[@]}"; do
             if [[ $i -eq $selected ]]; then
                 echo "${GREEN}▶ ${options[$i]}${RES}"
@@ -72,6 +79,8 @@ function select_option {
 
     # Restaurar cursor
     tput cnorm
+    # Clear prompt for next usage
+    unset SELECT_PROMPT
     return $selected
 }
 
@@ -96,7 +105,12 @@ ${YELLOW}${BOLD}MkServer by Spectrasonic${RES}
 "
 
 echo "${GREEN}Generando servidor de ${MAGENTA}Minecraft con Plugins${RES}"
-read -p "${GREEN}${BOLD}Nombre del Servidor: ${RES}" FOLDER_NAME
+if [ -n "$1" ]; then
+    FOLDER_NAME="$1"
+    echo "${GREEN}Nombre del Servidor: ${BOLD}${FOLDER_NAME}${RES}"
+else
+    read -p "${GREEN}${BOLD}Nombre del Servidor: ${RES}" FOLDER_NAME
+fi
 
 	if [ -d "${FOLDER_NAME}" ]; then
 	echo "${RED}El directorio ya existe${RES}"
@@ -105,21 +119,19 @@ else
 	mkdir "${FOLDER_NAME}"
 
 	# Seleccionar versión de Minecraft
-	echo "${YELLOW}Select Minecraft Version: ${RES}"
-	echo
-	options=("1.20.1" "1.20.4" "1.21.1" "1.21.4" "1.21.8" "1.21.10" "1.21.11")
-	select_option "${options[@]}"
-	choice=$?
-	MINECRAFT_VERSION="${options[$choice]}"
+  SELECT_PROMPT="${GREEN}Select Minecraft Version:${RES}"
+  options=("1.20.1" "1.20.4" "1.21.1" "1.21.4" "1.21.8" "1.21.10" "1.21.11")
+  select_option "${options[@]}"
+  choice=$?
+  MINECRAFT_VERSION="${options[$choice]}"
 	clear
 
-	# Seleccionar tipo de servidor
-	echo "${YELLOW}Select Server Project: ${RES}"
-	echo
-	options=("paper" "purpur")
-	select_option "${options[@]}"
-	choice=$?
-	PROJECT="${options[$choice]}"
+  # Seleccionar tipo de servidor
+  SELECT_PROMPT="${GREEN}Select Server Project:${RES}"
+  options=("paper" "purpur")
+  select_option "${options[@]}"
+  choice=$?
+  PROJECT="${options[$choice]}"
 	clear
 
 	case $PROJECT in
@@ -163,8 +175,7 @@ read -p "${GREEN}View Distance (Int >5): ${RES}" VIEWDISTANCE ;clear
 read -p "${GREEN}Simulation Distance (Int >5): ${RES}" SIMDISTANCE ;clear
 
 # ------------------------------
-echo "${YELLOW}Enable Command Blocks: ${RES}"
-echo
+SELECT_PROMPT="${GREEN}Enable Command Blocks:${RES}"
 options=("true" "false")
 select_option "${options[@]}"
 choice=$?
@@ -172,8 +183,7 @@ ENABLECB="${options[$choice]}"
 clear
 
 # ------------------------------
-echo "${YELLOW}Select Gamemode: ${RES}"
-echo
+SELECT_PROMPT="${GREEN}Select Gamemode:${RES}"
 options=("survival" "creative" "adventure" "spectator")
 select_option "${options[@]}"
 choice=$?
@@ -181,8 +191,7 @@ GAMEMODE="${options[$choice]}"
 clear
 
 # ------------------------------
-echo "${YELLOW}Select Difficulty: ${RES}"
-echo
+SELECT_PROMPT="${GREEN}Select Difficulty:${RES}"
 options=("peaceful" "easy" "normal" "hard")
 select_option "${options[@]}"
 choice=$?
@@ -190,8 +199,7 @@ DIFFICULTY="${options[$choice]}"
 clear
 
 # ------------------------------
-echo "${YELLOW}Hardcore: ${RES}"
-echo
+SELECT_PROMPT="${RED}Hardcore:${RES}"
 options=("false" "true")
 select_option "${options[@]}"
 choice=$?
@@ -199,8 +207,7 @@ HARDCORE="${options[$choice]}"
 clear
 
 # ------------------------------
-echo "${YELLOW}Spawn Monsters: ${RES}"
-echo
+SELECT_PROMPT="${GREEN}Spawn Monsters:${RES}"
 options=("true" "false")
 select_option "${options[@]}"
 choice=$?
@@ -208,8 +215,7 @@ SPAWNMONSTERS="${options[$choice]}"
 clear
 
 # ------------------------------
-echo "${YELLOW}Spawn NPCs: ${RES}"
-echo
+SELECT_PROMPT="${GREEN}Spawn NPCs:${RES}"
 options=("true" "false")
 select_option "${options[@]}"
 choice=$?
@@ -217,8 +223,7 @@ SPAWNNPCS="${options[$choice]}"
 clear
 
 # ------------------------------
-echo "${YELLOW}Spawn Animals: ${RES}"
-echo
+SELECT_PROMPT="${GREEN}Spawn Animals:${RES}"
 options=("true" "false")
 select_option "${options[@]}"
 choice=$?
@@ -226,8 +231,7 @@ SPAWNANIMALS="${options[$choice]}"
 clear
 
 # ------------------------------
-echo "${YELLOW}Allow Nether: ${RES}"
-echo
+SELECT_PROMPT="${GREEN}Allow Nether:${RES}"
 options=("true" "false")
 select_option "${options[@]}"
 choice=$?
@@ -235,7 +239,7 @@ ALLOWNETHER="${options[$choice]}"
 clear
 
 # ------------------------------
-echo "${YELLOW}Allow White List: ${RES}"
+echo "${GREEN}Allow Whitelist: ${RES}"
 echo
 options=("false" "true")
 select_option "${options[@]}"
@@ -244,7 +248,7 @@ WHITELIST="${options[$choice]}"
 clear
 
 # ------------------------------
-echo "${YELLOW}Allow PVP: ${RES}"
+echo "${GREEN}Allow PVP: ${RES}"
 echo
 options=("true" "false")
 select_option "${options[@]}"
@@ -253,7 +257,7 @@ PVP="${options[$choice]}"
 clear
 
 # ------------------------------
-echo "${YELLOW}Allow Flight: ${RES}"
+echo "${GREEN}Allow Flight: ${RES}"
 echo
 options=("true" "false")
 select_option "${options[@]}"
@@ -262,7 +266,7 @@ ALLOWFLIGHT="${options[$choice]}"
 clear
 
 # ------------------------------
-echo "${YELLOW}Online Mode: ${RES}"
+echo "${GREEN}Online Mode: ${RES}"
 echo
 options=("true" "false")
 select_option "${options[@]}"
