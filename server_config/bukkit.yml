@@ -30,10 +30,10 @@ ticks-per:
   ambient-spawns: 1
   autosave: 6000
 aliases: now-in-commands.yml
-# worlds:
-#   world:
-#     generator: VoidWorldGen
-#   world_nether:
-#     generator: VoidWorldGen
-#   world_the_end:
-#     generator: VoidWorldGen
+worlds:
+  world:
+    generator: VoidGen
+  world_nether:
+    generator: VoidGen
+  world_the_end:
+    generator: VoidGen

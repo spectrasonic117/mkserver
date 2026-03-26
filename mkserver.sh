@@ -167,6 +167,22 @@ curl -o server-icon.png "https://raw.githubusercontent.com/spectrasonic117/Serve
 echo "${RES}"
 echo "${GREEN}Icono Servidor creado."
 
+# Create Directories
+
+mkdir -p plugins
+mkdir -p config
+
+# Server Config
+curl -o server.properties "https://raw.githubusercontent.com/spectrasonic117/mkserver/refs/heads/master/server_config/bukkit.yml"
+curl -o pufferfish.yml "https://raw.githubusercontent.com/spectrasonic117/mkserver/refs/heads/master/server_config/pufferfish.yml"
+curl -o purpur.yml "https://raw.githubusercontent.com/spectrasonic117/mkserver/refs/heads/master/server_config/purpur.yml"
+curl -o spigot.yml "https://raw.githubusercontent.com/spectrasonic117/mkserver/refs/heads/master/server_config/spigot.yml"
+
+# Paper Config
+
+curl -o ./config/paper-global.yml "https://raw.githubusercontent.com/spectrasonic117/mkserver/refs/heads/master/server_config/config/paper-global.yml"
+curl -o ./config/paper-world-defaults.yml "https://raw.githubusercontent.com/spectrasonic117/mkserver/refs/heads/master/server_config/config/paper-world-defaults.yml"
+
 clear
 echo "${BOLD}${YELLOW}Configure ${BLUE}server.properties: ${RES}"
 
@@ -239,8 +255,7 @@ ALLOWNETHER="${options[$choice]}"
 clear
 
 # ------------------------------
-echo "${GREEN}Allow Whitelist: ${RES}"
-echo
+SELECT_PROMPT="${GREEN}Allow Whitelist: ${RES}"
 options=("false" "true")
 select_option "${options[@]}"
 choice=$?
@@ -248,8 +263,7 @@ WHITELIST="${options[$choice]}"
 clear
 
 # ------------------------------
-echo "${GREEN}Allow PVP: ${RES}"
-echo
+SELECT_PROMPT="${GREEN}Allow PVP: ${RES}"
 options=("true" "false")
 select_option "${options[@]}"
 choice=$?
@@ -257,8 +271,7 @@ PVP="${options[$choice]}"
 clear
 
 # ------------------------------
-echo "${GREEN}Allow Flight: ${RES}"
-echo
+SELECT_PROMPT="${GREEN}Allow Flight: ${RES}"
 options=("true" "false")
 select_option "${options[@]}"
 choice=$?
@@ -266,7 +279,7 @@ ALLOWFLIGHT="${options[$choice]}"
 clear
 
 # ------------------------------
-echo "${GREEN}Online Mode: ${RES}"
+SELECT_PROMPT="${GREEN}Online Mode: ${RES}"
 echo
 options=("true" "false")
 select_option "${options[@]}"
