@@ -169,7 +169,6 @@ echo "${GREEN}Icono Servidor creado."
 
 # Create Directories
 
-mkdir -p plugins
 mkdir -p config
 
 # Server Config
@@ -350,6 +349,41 @@ enforce-whitelist=false
 spawn-protection=0
 resource-pack-sha1=
 max-world-size=29999984" > $PWD/server.properties
+
+
+# --- Modrinth Plugins ---
+get_modrinth_latest() {
+local project="$1"
+curl -s "https://api.modrinth.com/v2/project/$project/version" \
+| jq -r '.[0] | "\(.files[0].url)|\(.name)|\(.version_number)|\(.files[0].filename)"'
+}
+
+download_modrinth_plugin() {
+local project="$1"
+local filename="$2"
+IFS='|' read -r url version_name version_number file_info <<< "$(get_modrinth_latest "$project")"
+echo "Version: ${version_name} (${version_number})"
+curl -sL "$url" -o "plugins/${filename}_v${version_number}.jar"
+echo "Downloaded: ${filename}_${version_number}.jar"
+}
+
+declare -a MODRINTH_PLUGINS=(
+    "antipopup:AntiPopup"
+    "luckperms:LuckPerms"
+    "skript:Skript"
+    "skript-reflect:SkriptReflect"
+    "commandapi:CommandAPI"
+    "plugmanx:PlugMan"
+    "voidgen:VoidGen"
+)
+
+mkdir -p plugins
+for plugin in "${MODRINTH_PLUGINS[@]}"; do
+    project="${plugin%%:*}"
+    name="${plugin#*:}"
+    download_modrinth_plugin "$project" "$name"
+done
+
 
 # Crete a start.sh File
 printf "#!/usr/bin/env sh
