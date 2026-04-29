@@ -177,6 +177,7 @@ curl -o server.properties "https://raw.githubusercontent.com/spectrasonic117/mks
 curl -o pufferfish.yml "https://raw.githubusercontent.com/spectrasonic117/mkserver/refs/heads/master/server_config/pufferfish.yml"
 curl -o purpur.yml "https://raw.githubusercontent.com/spectrasonic117/mkserver/refs/heads/master/server_config/purpur.yml"
 curl -o spigot.yml "https://raw.githubusercontent.com/spectrasonic117/mkserver/refs/heads/master/server_config/spigot.yml"
+curl -o spigot.yml "https://raw.githubusercontent.com/spectrasonic117/mkserver/refs/heads/master/server_config/server_TUI.py"
 
 # Paper Config
 
@@ -361,7 +362,8 @@ while true; do
     read yn
     case $yn in
         [Yy]* )
-        command bash start.sh
+        # command bash start.sh
+        command python server_TUI.py
         break;;
         [Nn]* )
         exit 0
