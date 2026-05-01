@@ -114,35 +114,51 @@ fi
 
 	if [ -d "${FOLDER_NAME}" ]; then
 	echo "${RED}El directorio ya existe${RES}"
-	PROJECT="${FOLDER_NAME}"
-else
+	if [ -f "${FOLDER_NAME}/server.info" ]; then
+	    source "${FOLDER_NAME}/server.info"
+	    MINECRAFT_VERSION="$VERSION"
+	    PROJECT="$TYPE"
+	else
+	    echo "${RED}No se pudo determinar la versión y tipo del servidor.${RES}"
+	    echo "${RED}Por favor, elimine la carpeta del servidor o cree un archivo server.info.${RES}"
+	    exit 1
+	fi
+	else
 	mkdir "${FOLDER_NAME}"
-
+	
 	# Seleccionar versión de Minecraft
-  SELECT_PROMPT="${GREEN}Select Minecraft Version:${RES}"
-  options=("1.20.1" "1.20.4" "1.21.1" "1.21.4" "1.21.8" "1.21.10" "1.21.11")
-  select_option "${options[@]}"
-  choice=$?
-  MINECRAFT_VERSION="${options[$choice]}"
-	clear
-
-  # Seleccionar tipo de servidor
-  SELECT_PROMPT="${GREEN}Select Server Project:${RES}"
-  options=("paper" "purpur")
-  select_option "${options[@]}"
-  choice=$?
-  PROJECT="${options[$choice]}"
-	clear
-
+   SELECT_PROMPT="${GREEN}Select Minecraft Version:${RES}"
+   options=("1.20.1" "1.20.4" "1.21.1" "1.21.4" "1.21.8" "1.21.10" "1.21.11" "26.1.2")
+   select_option "${options[@]}"
+   choice=$?
+   MINECRAFT_VERSION="${options[$choice]}"
+   clear
+	
+   # Seleccionar tipo de servidor
+   SELECT_PROMPT="${GREEN}Select Server Project:${RES}"
+   options=("paper" "purpur")
+   select_option "${options[@]}"
+   choice=$?
+   PROJECT="${options[$choice]}"
+   clear
+	
+	# Guardar información del servidor para futuras actualizaciones
+	echo "VERSION=$MINECRAFT_VERSION" > "${FOLDER_NAME}/server.info"
+	echo "TYPE=$PROJECT" >> "${FOLDER_NAME}/server.info"
+	
 	case $PROJECT in
 		"paper")
 			echo "${BLUE}PaperMC Selected${RES}"
-			LATEST_BUILD=$(curl -s https://api.papermc.io/v2/projects/${PROJECT}/versions/${MINECRAFT_VERSION}/builds | \
-			jq -r '.builds | map(select(.channel == "default") | .build) | .[-1]')
-			JAR_NAME=${PROJECT}-${MINECRAFT_VERSION}-${LATEST_BUILD}.jar
-			JAR_DOWNLOAD="https://api.papermc.io/v2/projects/${PROJECT}/versions/${MINECRAFT_VERSION}/builds/${LATEST_BUILD}/downloads/${JAR_NAME}"
+			USER_AGENT="mkserver/1.0.0 (contact@me.com)"
+			
+			# Get builds for the requested version
+			BUILDS_RESPONSE=$(curl -s -H "User-Agent: $USER_AGENT" "https://fill.papermc.io/v3/projects/${PROJECT}/versions/${MINECRAFT_VERSION}/builds")
+			
+			# Try to get the latest stable build URL
+			JAR_DOWNLOAD=$(echo "$BUILDS_RESPONSE" | jq -r 'sort_by(-.build) | .[] | select(.channel == "STABLE") | .downloads."server:default".url' | head -n1)
 			;;
 		"purpur")
+			echo "${MAGENTA}PurpurMC Selected${RES}"
 			JAR_DOWNLOAD="https://api.purpurmc.org/v2/purpur/${MINECRAFT_VERSION}/latest/download"
 			;;
 	esac
@@ -172,7 +188,7 @@ echo "${GREEN}Icono Servidor creado."
 mkdir -p config
 
 # Server Config
-curl -o server.properties "https://raw.githubusercontent.com/spectrasonic117/mkserver/refs/heads/master/server_config/bukkit.yml"
+curl -o bukkit.yml "https://raw.githubusercontent.com/spectrasonic117/mkserver/refs/heads/master/server_config/bukkit.yml"
 curl -o pufferfish.yml "https://raw.githubusercontent.com/spectrasonic117/mkserver/refs/heads/master/server_config/pufferfish.yml"
 curl -o purpur.yml "https://raw.githubusercontent.com/spectrasonic117/mkserver/refs/heads/master/server_config/purpur.yml"
 curl -o spigot.yml "https://raw.githubusercontent.com/spectrasonic117/mkserver/refs/heads/master/server_config/spigot.yml"
@@ -353,18 +369,70 @@ max-world-size=29999984" > $PWD/server.properties
 
 # --- Modrinth Plugins ---
 get_modrinth_latest() {
-local project="$1"
-curl -s "https://api.modrinth.com/v2/project/$project/version" \
-| jq -r '.[0] | "\(.files[0].url)|\(.name)|\(.version_number)|\(.files[0].filename)"'
+    local project="$1"
+    # If we don't have MINECRAFT_VERSION set, we cannot proceed.
+    if [[ -z "$MINECRAFT_VERSION" ]]; then
+        echo "Error: MINECRAFT_VERSION not set" >&2
+        return 1
+    fi
+
+    # Priority of loaders: purpur, paper, bukkit
+    local loader_priority=("purpur" "paper" "bukkit")
+
+    # Convert loader_priority to a JSON array
+    local loader_priority_json
+    loader_priority_json=$(printf '%s\n' "${loader_priority[@]}" | jq -R . | jq -s .)
+    if [[ -z "$loader_priority_json" || "$loader_priority_json" == "[]" ]]; then
+        loader_priority_json='["purpur","paper","bukkit"]'
+    fi
+
+    # Fetch and filter versions
+    curl -s "https://api.modrinth.com/v2/project/$project/version" |
+    jq --arg mc "$MINECRAFT_VERSION" --argjson loader_priority "$loader_priority_json" '
+        .[] | 
+        select(.game_versions | index($mc)) |
+        select(.loaders | any(. as $loader | $loader_priority | index($loader))) |
+        "\(.files[0].url)|\(.name)|\(.version_number)|\(.files[0].filename)"
+    ' | head -n 1
 }
 
 download_modrinth_plugin() {
-local project="$1"
-local filename="$2"
-IFS='|' read -r url version_name version_number file_info <<< "$(get_modrinth_latest "$project")"
-echo "Version: ${version_name} (${version_number})"
-curl -sL "$url" -o "plugins/${filename}_v${version_number}.jar"
-echo "Downloaded: ${filename}_${version_number}.jar"
+    local project="$1"
+    local filename="$2"
+    local result
+    result=$(get_modrinth_latest "$project")
+    if [[ -z "$result" ]]; then
+        echo "Error: Could not get version info for $project"
+        return 1
+    fi
+    IFS='|' read -r url version_name version_number file_info <<< "$result"
+    # Eliminar comillas dobles que puedan estar presentes
+    url="${url%\"}"
+    url="${url#\"}"
+    version_name="${version_name%\"}"
+    version_name="${version_name#\"}"
+    version_number="${version_number%\"}"
+    version_number="${version_number#\"}"
+    file_info="${file_info%\"}"
+    file_info="${file_info#\"}"
+    
+    if [[ -z "$url" ]]; then
+        echo "Error: Empty URL for $project"
+        return 1
+    fi
+    echo "Version: ${version_name} (${version_number})"
+    echo "Downloading from: $url"
+    if curl -sL "$url" -o "plugins/${filename}_v${version_number}.jar"; then
+        if [[ -f "plugins/${filename}_v${version_number}.jar" && -s "plugins/${filename}_v${version_number}.jar" ]]; then
+            echo "Downloaded: ${filename}_${version_number}.jar"
+        else
+            echo "Error: Download failed for ${filename}_v${version_number}.jar (empty file)"
+            return 1
+        fi
+    else
+        echo "Error: curl failed for $url"
+        return 1
+    fi
 }
 
 declare -a MODRINTH_PLUGINS=(
@@ -375,6 +443,8 @@ declare -a MODRINTH_PLUGINS=(
     "commandapi:CommandAPI"
     "plugmanx:PlugMan"
     "voidgen:VoidGen"
+    "tab-was-taken:TAB"
+    "fastasyncworldedit:FAWE"
 )
 
 mkdir -p plugins
